@@ -1,0 +1,26 @@
+# Diretório de trabalho local do Terraform
+.terraform/
+
+# Arquivos de estado do Terraform
+*.tfstate
+*.tfstate.*
+
+# Arquivos de plano de execução
+*.tfplan
+*.plan
+
+# Logs de erro do Terraform
+crash.log
+crash.*.log
+
+# Arquivos de configuração local do Terraform
+.terraformrc
+terraform.rc
+
+# Arquivos de configuração da IDE
+.vscode/
+.idea/
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
