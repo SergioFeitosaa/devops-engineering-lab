@@ -311,3 +311,67 @@ Em Kubernetes, poderiam ser adotadas medidas adicionais como:
 - aplicar políticas de segurança e monitoramento do cluster.
 
 Essas medidas devem ser configuradas de acordo com as necessidades reais da aplicação e do ambiente.
+
+## 6. Respostas às perguntas por etapa
+
+### 6.1 Por que utilizar uma imagem-base menor?
+
+Uma imagem-base menor tende a incluir menos componentes, bibliotecas e ferramentas desnecessárias para a execução da aplicação. Isso pode reduzir a superfície de ataque e facilitar a manutenção e a atualização das dependências.
+
+Neste projeto, foi utilizada a imagem `node:22.20.0-bookworm-slim`, mais específica e enxuta do que a imagem genérica `ubuntu:latest` utilizada originalmente.
+
+### 6.2 Qual é o impacto de executar a aplicação como root?
+
+A execução como `root` concede privilégios administrativos dentro do container. Caso a aplicação seja comprometida, esses privilégios podem aumentar o impacto de ações maliciosas, como alterações em arquivos e exploração de permissões disponíveis.
+
+Neste projeto, a instrução `USER node` foi utilizada para executar a aplicação com um usuário não administrativo.
+
+### 6.3 Por que não se devem armazenar senhas diretamente no Dockerfile?
+
+Senhas escritas diretamente no Dockerfile podem permanecer no histórico do código, em camadas da imagem ou em metadados associados ao processo de construção. Isso aumenta o risco de exposição das credenciais.
+
+Neste projeto, a variável `DB_PASSWORD` definida no Dockerfile original foi removida, e a configuração da senha do MySQL passou a ser feita por variável de ambiente.
+
+### 6.4 Qual é a função do arquivo `.env`?
+
+O arquivo `.env` armazena valores de configuração específicos do ambiente local, como a senha utilizada pelo serviço MySQL. Ele não deve ser versionado quando contém informações sensíveis.
+
+Neste projeto, o arquivo foi incluído no `.gitignore`.
+
+### 6.5 Qual é a função do `.env.example`?
+
+O `.env.example` apresenta os nomes das variáveis necessárias para configurar o ambiente, sem incluir os valores reais. Dessa forma, outro desenvolvedor pode criar seu próprio arquivo `.env` sem precisar conhecer as credenciais locais de quem desenvolveu o projeto.
+
+### 6.6 Qual é o risco de declarar uma senha literal no Docker Compose?
+
+Uma senha escrita diretamente no arquivo `docker-compose.yml` pode ser exposta a quem tiver acesso ao repositório ou ao histórico de alterações.
+
+A utilização de variáveis de ambiente evita deixar o valor diretamente no arquivo de configuração versionado. Entretanto, variáveis de ambiente não são um gerenciador de segredos completo: usuários com acesso suficiente ao Docker podem conseguir inspecionar a configuração do container.
+
+Em produção, devem ser avaliados mecanismos apropriados de gerenciamento de segredos.
+
+### 6.7 Por que o banco de dados não deve ter sua porta publicada no host sem necessidade?
+
+A publicação da porta do banco aumenta a superfície de exposição e pode permitir tentativas de conexão a partir do host ou de outras origens alcançáveis, conforme a configuração de rede.
+
+Quando apenas serviços internos precisam acessar o banco, a comunicação pode ocorrer pela rede do Docker Compose, sem publicar a porta do banco no host. Neste projeto, as portas do MySQL não foram mapeadas para o host.
+
+### 6.8 Qual é a importância dos limites de CPU e memória?
+
+Sem limites apropriados, um container pode consumir recursos excessivos e prejudicar outros processos ou serviços no host.
+
+Os limites de CPU e memória ajudam a controlar esse consumo. Neste projeto, foram configurados 0,5 CPU e 128 MiB para a aplicação, e 1 CPU e 512 MiB para o banco de dados.
+
+## 7. Conclusão
+
+O projeto passou por alterações destinadas a melhorar a segurança e a previsibilidade da execução dos containers.
+
+As principais medidas aplicadas foram a substituição da imagem-base genérica por uma imagem Node.js mais específica, a execução da aplicação com um usuário não administrativo, a separação das configurações sensíveis, a remoção da publicação da porta do MySQL no host e a definição de limites de CPU e memória.
+
+As validações realizadas confirmaram a construção da imagem da aplicação, a resposta HTTP local, a execução com o usuário `node`, a aplicação da regra de exclusão do `.env`, a aceitação da configuração pelo Docker Compose, os limites de recursos e a inicialização do MySQL.
+
+O projeto ainda possui limitações. A aplicação não implementa comunicação funcional com o banco de dados, e não foram executadas todas as verificações possíveis de segurança.
+
+Em uma evolução futura, recomenda-se adicionar verificações automatizadas de vulnerabilidades, testes automatizados e mecanismos específicos de gerenciamento de segredos.
+
+As medidas de hardening reduzem riscos, mas não eliminam a necessidade de atualizações, monitoramento e validações contínuas.
