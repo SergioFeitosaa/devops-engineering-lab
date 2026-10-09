@@ -1,0 +1,8 @@
+# Arquivos e diretórios que não devem entrar no contexto de build
+.env
+.git
+node_modules
+docs/
+HARDENING.md
+README.md
+.env.example
