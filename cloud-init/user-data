@@ -1,0 +1,50 @@
+
+#cloud-config
+
+# Atualiza a lista de pacotes antes das instalações
+package_update: true
+package_upgrade: false
+
+bootcmd:
+  - mkdir -p /var/www/html
+
+# Cria um usuário administrador
+users:
+  - name: meu-usuario
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFmQo2nr5wNB/bdmEOsGEIpFJy/90P9cFsN/pBkaTIus sergio.feitosa2@gmail.com"
+
+# Instala os softwares declarativamente
+packages:
+  - docker.io
+  - nginx
+
+# Cria uma página personalizada
+write_files:
+  - path: /var/www/html/index.html
+    owner: root:root
+    permissions: '0644'
+    content: |
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Laboratório Cloud-Init</title>
+      </head>
+      <body>
+        <h1>Cloud-Init configurado com sucesso!</h1>
+        <p>Ambiente DevOps provisionado automaticamente.</p>
+        <p>Docker e Nginx fazem parte desta infraestrutura.</p>
+      </body>
+      </html>
+
+#Executa comandos após as etapas de configuração
+runcmd:
+  - [systemctl, enable, --now, nginx]
+  - [systemctl, enable, --now, docker]
+  - [usermod, -aG, docker, meu-usuario]
+  - [bash, -c, 'echo "Cloud-Init: configuração concluída com sucesso!" | tee -a /var/log/cloud-init-final-message.log']
